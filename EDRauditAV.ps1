@@ -6,7 +6,7 @@
 .PARAMETER Fix
     Permet de réparer automatiquement les points de sécurité critiques détectés. Accepte les valeurs :  "Firewall", "SmartScreen", "Defender", "SMBv1", "LSA" ou "All" pour tout réparer. Par défaut, aucune action de réparation n'est effectuée.
 .EXAMPLE
-    .\EDRauditAV.ps1
+    .\auditdefend.ps1
     Réalise un audit complet de la sécurité Windows sans appliquer de remédiation.
 .PARAMETER Help
     Affiche l'aide détaillée avec des exemples de commandes et des conseils de remédiation.
@@ -55,20 +55,20 @@ if ($Help) {
     Write-Host "`n                                        [ EDR - AIDE ]" -ForegroundColor Cyan
     Write-Host " ------------------------------------------------------------------------------------------------" -ForegroundColor Cyan
     Write-Host " [ COMMANDE ]" -ForegroundColor White
-    Write-Host "   .\EDRauditAV.ps1                 -> Audit (Lecture seule)" -ForegroundColor Gray
-    Write-Host "   .\EDRauditAV.ps1 -Fix Firewall   -> Répare le Firewall" -ForegroundColor Yellow
-    Write-Host "   .\EDRauditAV.ps1 -Fix SmartScreen -> Répare SmartScreen" -ForegroundColor Yellow
-    Write-Host "   .\EDRauditAV.ps1 -Fix Defender    -> Répare Windows Defender" -ForegroundColor Yellow
-    Write-Host "   .\EDRauditAV.ps1 -Fix SMBv1       -> Répare SMBv1" -ForegroundColor Yellow
-    Write-Host "   .\EDRauditAV.ps1 -Fix LSA         -> Répare le LSA" -ForegroundColor Yellow
-    Write-Host "   .\EDRauditAV.ps1 -Fix All          -> RÉPARER TOUT" -ForegroundColor Cyan
+    Write-Host "   .\auditdefend.ps1                 -> Audit (Lecture seule)" -ForegroundColor Gray
+    Write-Host "   .\auditdefend.ps1 -Fix Firewall   -> Répare le Firewall" -ForegroundColor Yellow
+    Write-Host "   .\auditdefend.ps1 -Fix SmartScreen -> Répare SmartScreen" -ForegroundColor Yellow
+    Write-Host "   .\auditdefend.ps1 -Fix Defender    -> Répare Windows Defender" -ForegroundColor Yellow
+    Write-Host "   .\auditdefend.ps1 -Fix SMBv1       -> Répare SMBv1" -ForegroundColor Yellow
+    Write-Host "   .\auditdefend.ps1 -Fix LSA         -> Répare le LSA" -ForegroundColor Yellow
+    Write-Host "   .\auditdefend.ps1 -Fix All          -> RÉPARER TOUT" -ForegroundColor Cyan
     Write-Host ""
     Write-Host " [ EXPORT & PARTAGE ]" -ForegroundColor White
     Write-Host ""
-    Write-Host "   .\EDRauditAV.ps1 *> $env:USERPROFILE\Desktop\Rapport_EDR.txt   -> Export sur le Bureau" -ForegroundColor Gray
+    Write-Host "   .\auditdefend.ps1 *> $env:USERPROFILE\Desktop\Rapport_EDR.txt   -> Export sur le Bureau" -ForegroundColor Gray
     Write-Host ""
-    Write-Host "   .\EDRauditAV.ps1 -ShareDpaste    -> Upload vers dpaste (Lecture Web directe)" -ForegroundColor Magenta
-    Write-Host "   .\EDRauditAV.ps1 -ShareGofile    -> Upload vers Gofile (Téléchargement fichier)" -ForegroundColor Magenta
+    Write-Host "   .\auditdefend.ps1 -ShareDpaste    -> Upload vers dpaste (Lecture Web directe)" -ForegroundColor Magenta
+    Write-Host "   .\auditdefend.ps1 -ShareGofile    -> Upload vers Gofile (Téléchargement fichier)" -ForegroundColor Magenta
     Write-Host ""
     Write-Host " ------------------------------------------------------------------------------------------------" -ForegroundColor Cyan
 
@@ -79,7 +79,9 @@ if ($Help) {
 #----------------------------------------------------
 #  START TRANSCRIPTION
 #----------------------------------------------------
-$PathBureau = "$env:USERPROFILE\Desktop\Rapport_EDR.txt"
+$outDir = "$env:USERPROFILE\Desktop\EDR_$(Get-Date -Format 'yyyyMMdd')"
+New-Item -ItemType Directory -Force -Path $outDir | Out-Null
+$PathBureau = "$outDir\Rapport_EDR.txt"
 if ($ShareDpaste -or $ShareGofile) {
     Start-Transcript -Path $PathBureau -Force -ErrorAction SilentlyContinue | Out-Null
 }
@@ -383,7 +385,7 @@ if ($ShareDpaste -or $ShareGofile) {
 # PARTAGE DE RAPPORT (DPASTE ET/OU GOFILE)
 #----------------------------------------------------
 
-$file = "$env:USERPROFILE\Desktop\Rapport_EDR.txt"
+$file = $PathBureau
 
 if ($ShareDpaste -or $ShareGofile) {
     
@@ -425,7 +427,7 @@ if ($ShareDpaste -or $ShareGofile) {
                 Write-Host " -> OK" -ForegroundColor Green
                 Write-Host " LIEN DPASTE : " -NoNewline
                 Write-Host $urlD -ForegroundColor Yellow
-                "$(Get-Date) : DPASTE -> $urlD" | Out-File "$env:USERPROFILE\Desktop\liens_upload.txt" -Append
+                "$(Get-Date) : DPASTE -> $urlD" | Out-File "$outDir\liens_upload.txt" -Append
             } else {
                 Write-Host " -> ERREUR (réponse inattendue)" -ForegroundColor Red
                 Write-Host " Détail : $urlD" -ForegroundColor Gray
@@ -452,7 +454,7 @@ if ($ShareDpaste -or $ShareGofile) {
                 Write-Host " -> OK" -ForegroundColor Green
                 Write-Host " LIEN GOFILE : " -NoNewline
                 Write-Host $dl -ForegroundColor Yellow
-                "$(Get-Date) : GOFILE  -> $dl" | Out-File "$env:USERPROFILE\Desktop\liens_upload.txt" -Append
+                "$(Get-Date) : GOFILE  -> $dl" | Out-File "$outDir\liens_upload.txt" -Append
             } else {
                 Write-Host " -> ERREUR : $($uploadJson.status)" -ForegroundColor Red
             }
@@ -461,11 +463,16 @@ if ($ShareDpaste -or $ShareGofile) {
         }
     }
 
-    $esc = [char]27
-    $dir = $env:USERPROFILE + "\Desktop"
-    $urlLocal = "file:///" + ($dir.Replace('\','/'))
-    $linkLocal = "$esc]8;;$urlLocal$esc\$dir$esc]8;;$esc\"
-    Write-Host "`n DOSSIER SOURCE : " -NoNewline
-    Write-Host $linkLocal -ForegroundColor Yellow
+    function Write-ClickableLink {
+        param([string]$Label, [string]$Path)
+        $esc = [char]27
+        Write-Host "${esc}]8;;file://$Path${esc}\$Label${esc}]8;;${esc}\" -ForegroundColor Yellow
+    }
+    
+    Write-Host "`n=== Emplacements ===" -ForegroundColor Cyan
+    Write-Host "Rapport :"
+    Write-ClickableLink -Label $file -Path $file
+    Write-Host "Dossier source :"
+    Write-ClickableLink -Label $outDir -Path $outDir
 }
 }
