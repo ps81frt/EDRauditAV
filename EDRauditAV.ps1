@@ -6,7 +6,7 @@
 .PARAMETER Fix
     Permet de réparer automatiquement les points de sécurité critiques détectés. Accepte les valeurs :  "Firewall", "SmartScreen", "Defender", "SMBv1", "LSA" ou "All" pour tout réparer. Par défaut, aucune action de réparation n'est effectuée.
 .EXAMPLE
-    .\auditdefend.ps1
+    .\EDRauditAV.ps1
     Réalise un audit complet de la sécurité Windows sans appliquer de remédiation.
 .PARAMETER Help
     Affiche l'aide détaillée avec des exemples de commandes et des conseils de remédiation.
@@ -55,20 +55,20 @@ if ($Help) {
     Write-Host "`n                                        [ EDR - AIDE ]" -ForegroundColor Cyan
     Write-Host " ------------------------------------------------------------------------------------------------" -ForegroundColor Cyan
     Write-Host " [ COMMANDE ]" -ForegroundColor White
-    Write-Host "   .\auditdefend.ps1                 -> Audit (Lecture seule)" -ForegroundColor Gray
-    Write-Host "   .\auditdefend.ps1 -Fix Firewall   -> Répare le Firewall" -ForegroundColor Yellow
-    Write-Host "   .\auditdefend.ps1 -Fix SmartScreen -> Répare SmartScreen" -ForegroundColor Yellow
-    Write-Host "   .\auditdefend.ps1 -Fix Defender    -> Répare Windows Defender" -ForegroundColor Yellow
-    Write-Host "   .\auditdefend.ps1 -Fix SMBv1       -> Répare SMBv1" -ForegroundColor Yellow
-    Write-Host "   .\auditdefend.ps1 -Fix LSA         -> Répare le LSA" -ForegroundColor Yellow
-    Write-Host "   .\auditdefend.ps1 -Fix All          -> RÉPARER TOUT" -ForegroundColor Cyan
+    Write-Host "   .\EDRauditAV.ps1                 -> Audit (Lecture seule)" -ForegroundColor Gray
+    Write-Host "   .\EDRauditAV.ps1 -Fix Firewall   -> Répare le Firewall" -ForegroundColor Yellow
+    Write-Host "   .\EDRauditAV.ps1 -Fix SmartScreen -> Répare SmartScreen" -ForegroundColor Yellow
+    Write-Host "   .\EDRauditAV.ps1 -Fix Defender    -> Répare Windows Defender" -ForegroundColor Yellow
+    Write-Host "   .\EDRauditAV.ps1 -Fix SMBv1       -> Répare SMBv1" -ForegroundColor Yellow
+    Write-Host "   .\EDRauditAV.ps1 -Fix LSA         -> Répare le LSA" -ForegroundColor Yellow
+    Write-Host "   .\EDRauditAV.ps1 -Fix All          -> RÉPARER TOUT" -ForegroundColor Cyan
     Write-Host ""
     Write-Host " [ EXPORT & PARTAGE ]" -ForegroundColor White
     Write-Host ""
-    Write-Host "   .\auditdefend.ps1 *> $env:USERPROFILE\Desktop\Rapport_EDR.txt   -> Export sur le Bureau" -ForegroundColor Gray
+    Write-Host "   .\EDRauditAV.ps1 *> $env:USERPROFILE\Desktop\Rapport_EDR.txt   -> Export sur le Bureau" -ForegroundColor Gray
     Write-Host ""
-    Write-Host "   .\auditdefend.ps1 -ShareDpaste    -> Upload vers dpaste (Lecture Web directe)" -ForegroundColor Magenta
-    Write-Host "   .\auditdefend.ps1 -ShareGofile    -> Upload vers Gofile (Téléchargement fichier)" -ForegroundColor Magenta
+    Write-Host "   .\EDRauditAV.ps1 -ShareDpaste    -> Upload vers dpaste (Lecture Web directe)" -ForegroundColor Magenta
+    Write-Host "   .\EDRauditAV.ps1 -ShareGofile    -> Upload vers Gofile (Téléchargement fichier)" -ForegroundColor Magenta
     Write-Host ""
     Write-Host " ------------------------------------------------------------------------------------------------" -ForegroundColor Cyan
 
@@ -442,7 +442,6 @@ if ($ShareDpaste -or $ShareGofile) {
     if ($ShareGofile) {
         Write-Host "[cloud] Envoi vers Gofile..." -ForegroundColor Cyan -NoNewline
         try {
-            # ✅ Récupère le bon serveur dynamiquement (store1 peut changer)
             $serverResp = Invoke-RestMethod -Uri "https://api.gofile.io/servers" -Method Get
             $server = $serverResp.data.servers[0].name
 
