@@ -38,7 +38,48 @@ Script PowerShell d'audit complet de la posture de sécurité Windows. Il inspec
 # Tout réparer
 .\EDRauditAV.ps1 -Fix All
 ```
+## Utilisation rapide + upload partage
 
+```powershell
+&{
+    $EDRauditAV = {
+        Clear-Host
+        $repoZip = "$env:TEMP\EDRauditAV.zip"
+        $extract = "$env:TEMP\EDRauditAV"
+        $file = "$env:USERPROFILE\Desktop\Rapport_EDR.txt"
+
+        Invoke-WebRequest "https://github.com/ps81frt/EDRauditAV/archive/refs/heads/main.zip" -OutFile $repoZip
+        Unblock-File $repoZip -ErrorAction SilentlyContinue
+        Expand-Archive $repoZip $extract -Force
+
+        $dir = Get-ChildItem "$extract" -Recurse -Filter "EDRauditAV.ps1" |
+            Select-Object -First 1
+
+        if (-not $dir) {
+            throw "EDRauditAV.ps1 introuvable."
+        }
+
+        Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+        & $dir.FullName -ShareDpaste -ShareGofile -Export $file
+
+        function Write-ClickableLink {
+            param([string]$Label, [string]$Path)
+            $esc = [char]27
+            Write-Host "${esc}]8;;file://$Path${esc}\$Label${esc}]8;;${esc}\" -ForegroundColor Yellow
+        }
+
+        Write-Host "`n=== Fichiers ===" -ForegroundColor Cyan
+        Write-Host "Rapport :"
+        Write-ClickableLink -Label $file -Path $file
+        Write-Host "Emplacement :"
+        Write-ClickableLink -Label $($dir.Directory.FullName) -Path $dir.Directory.FullName
+
+    }
+
+    & $EDRauditAV
+}
+```
 ---
 
 ## Paramètres
