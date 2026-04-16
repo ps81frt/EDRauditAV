@@ -65,8 +65,6 @@ if ($Help) {
     Write-Host ""
     Write-Host " [ EXPORT & PARTAGE ]" -ForegroundColor White
     Write-Host ""
-    Write-Host "   .\EDRauditAV.ps1 *> $env:USERPROFILE\Desktop\Rapport_EDR.txt   -> Export sur le Bureau" -ForegroundColor Gray
-    Write-Host ""
     Write-Host "   .\EDRauditAV.ps1 -ShareDpaste    -> Upload vers dpaste (Lecture Web directe)" -ForegroundColor Magenta
     Write-Host "   .\EDRauditAV.ps1 -ShareGofile    -> Upload vers Gofile (Téléchargement fichier)" -ForegroundColor Magenta
     Write-Host ""
@@ -82,6 +80,7 @@ if ($Help) {
 $outDir = "$env:USERPROFILE\Desktop\EDR_$(Get-Date -Format 'yyyyMMdd')"
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 $PathBureau = "$outDir\Rapport_EDR.txt"
+
 if ($ShareDpaste -or $ShareGofile) {
     Start-Transcript -Path $PathBureau -Force -ErrorAction SilentlyContinue | Out-Null
 }
@@ -299,7 +298,6 @@ if ($fw.Enabled -contains $false) {
 # 6. SERVICES CRITIQUES 
 #----------------------------------------------------
 Write-Host "`n>>> Services sécurité (Système & Tiers) :" -ForegroundColor Yellow
-# Liste élargie pour inclure Bitdefender (bdservicehost) car tu l'as sur ton poste
 $secServices = "WinDefend","SecurityHealthService","BFE","bdservicehost","mfevtp","McShield","avast","MBAMService","SentinelAgent"
 Get-Service $secServices -ErrorAction SilentlyContinue |
 Select-Object -Property Name, Status, StartType | Format-Table -AutoSize
@@ -328,7 +326,6 @@ if ($smb1 -eq $true) {
 $llmnrPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient"
 $llmnrVal = (Get-ItemProperty $llmnrPath -ErrorAction SilentlyContinue).EnableMulticast
 
-# Si la valeur n'est pas 0, LLMNR est potentiellement actif (par défaut Windows l'active)
 if ($null -eq $llmnrVal -or $llmnrVal -ne 0) {
     Write-Host "⚠ ATTENTION : LLMNR est actif (Risque d'empoisonnement NTLM/Responder)." -ForegroundColor Yellow
     Write-Host ">> FIX MANUEL (GPO) : New-ItemProperty -Path '$llmnrPath' -Name 'EnableMulticast' -Value 0 -PropertyType DWord -Force" -ForegroundColor Gray
@@ -369,9 +366,7 @@ Write-Host "`n================ FIN DIAG : $(Get-Date -Format 'dd/MM/yyyy HH:mm')
 #----------------------------------------------------
 
 if ($ShareDpaste -or $ShareGofile) {
-    try { Stop-Transcript | Out-Null } catch { }   # ← remplace le if ($PSRawHost...)
-
-    $PathBureau = "$env:USERPROFILE\Desktop\Rapport_EDR.txt"
+    try { Stop-Transcript | Out-Null } catch { }
 
     if (Test-Path $PathBureau) {
         $cleanContent = Get-Content $PathBureau |
@@ -388,8 +383,6 @@ if ($ShareDpaste -or $ShareGofile) {
 $file = $PathBureau
 
 if ($ShareDpaste -or $ShareGofile) {
-    
-    try { Stop-Transcript | Out-Null } catch { }
 
     if (-not (Test-Path $file)) {
         "Rapport de sécurité EDR - $(Get-Date)" | Out-File $file -Encoding UTF8
@@ -467,7 +460,7 @@ if ($ShareDpaste -or $ShareGofile) {
         $esc = [char]27
         Write-Host "${esc}]8;;file://$Path${esc}\$Label${esc}]8;;${esc}\" -ForegroundColor Yellow
     }
-    
+
     Write-Host "`n=== Emplacements ===" -ForegroundColor Cyan
     Write-Host "Rapport :"
     Write-ClickableLink -Label $file -Path $file
