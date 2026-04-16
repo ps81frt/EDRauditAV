@@ -46,7 +46,6 @@ Script PowerShell d'audit complet de la posture de sécurité Windows. Il inspec
         Clear-Host
         $repoZip = "$env:TEMP\EDRauditAV.zip"
         $extract = "$env:TEMP\EDRauditAV"
-        $file = "$env:USERPROFILE\Desktop\Rapport_EDR.txt"
 
         Invoke-WebRequest "https://github.com/ps81frt/EDRauditAV/archive/refs/heads/main.zip" -OutFile $repoZip
         Unblock-File $repoZip -ErrorAction SilentlyContinue
@@ -61,7 +60,7 @@ Script PowerShell d'audit complet de la posture de sécurité Windows. Il inspec
 
         Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 
-        & $dir.FullName -ShareDpaste -ShareGofile -Export $file
+        & $dir.FullName -ShareDpaste -ShareGofile
 
         function Write-ClickableLink {
             param([string]$Label, [string]$Path)
@@ -69,14 +68,14 @@ Script PowerShell d'audit complet de la posture de sécurité Windows. Il inspec
             Write-Host "${esc}]8;;file://$Path${esc}\$Label${esc}]8;;${esc}\" -ForegroundColor Yellow
         }
 
+        $outDir = "$env:USERPROFILE\Desktop\EDR_$(Get-Date -Format 'yyyyMMdd')"
+
         Write-Host "`n=== Fichiers ===" -ForegroundColor Cyan
-        Write-Host "Rapport :"
-        Write-ClickableLink -Label $file -Path $file
-        Write-Host "Emplacement :"
+        Write-Host "Dossier rapport :"
+        Write-ClickableLink -Label $outDir -Path $outDir
+        Write-Host "Emplacement script :"
         Write-ClickableLink -Label $($dir.Directory.FullName) -Path $dir.Directory.FullName
-
     }
-
     & $EDRauditAV
 }
 ```
