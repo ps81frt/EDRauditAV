@@ -38,6 +38,7 @@ Script PowerShell d'audit complet de la posture de sécurité Windows. Il inspec
 # Tout réparer
 .\EDRauditAV.ps1 -Fix All
 ```
+
 ## Utilisation rapide + upload partage
 
 ```powershell
@@ -68,17 +69,14 @@ Script PowerShell d'audit complet de la posture de sécurité Windows. Il inspec
             Write-Host "${esc}]8;;file://$Path${esc}\$Label${esc}]8;;${esc}\" -ForegroundColor Yellow
         }
 
-        $outDir = "$env:USERPROFILE\Desktop\EDR_$(Get-Date -Format 'yyyyMMdd')"
-
         Write-Host "`n=== Fichiers ===" -ForegroundColor Cyan
-        Write-Host "Dossier rapport :"
-        Write-ClickableLink -Label $outDir -Path $outDir
         Write-Host "Emplacement script :"
         Write-ClickableLink -Label $($dir.Directory.FullName) -Path $dir.Directory.FullName
     }
     & $EDRauditAV
 }
 ```
+
 ---
 
 ## Paramètres
@@ -110,9 +108,6 @@ Script PowerShell d'audit complet de la posture de sécurité Windows. Il inspec
 ## Export & Partage
 
 ```powershell
-# Export manuel vers le Bureau
-.\EDRauditAV.ps1 *> "$env:USERPROFILE\Desktop\Rapport_EDR.txt"
-
 # Upload automatique vers dpaste (lien web partageable)
 .\EDRauditAV.ps1 -ShareDpaste
 
@@ -123,9 +118,10 @@ Script PowerShell d'audit complet de la posture de sécurité Windows. Il inspec
 .\EDRauditAV.ps1 -ShareDpaste -ShareGofile
 ```
 
-Les liens générés sont sauvegardés dans :
+Le rapport et les liens générés sont sauvegardés dans un dossier daté sur le Bureau :
 ```
-%USERPROFILE%\Desktop\liens_upload.txt
+%USERPROFILE%\Desktop\EDR_YYYYMMDD\Rapport_EDR.txt
+%USERPROFILE%\Desktop\EDR_YYYYMMDD\liens_upload.txt
 ```
 
 ---
@@ -156,6 +152,12 @@ OK : SMBv1 est désactivé.
 === PHASE D'UPLOAD ===
 [cloud] Envoi vers dpaste... [3955 chars] -> OK
  LIEN DPASTE : https://dpaste.com/XXXXXXXX
+
+=== Emplacements ===
+Rapport :
+C:\Users\<user>\Desktop\EDR_20260416\Rapport_EDR.txt
+Dossier source :
+C:\Users\<user>\Desktop\EDR_20260416
 ```
 
 ---
